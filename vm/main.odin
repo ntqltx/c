@@ -59,6 +59,19 @@ my_allocator_proc :: proc(
                 os.exit(1)
             }
             return bytes, nil
+
+        case .Alloc_Non_Zeroed:
+            // fmt.println("ALLOC_NON_ZEROED")
+            bytes, error := allocator.procedure(
+                allocator_data, mode, size, alignment, 
+                old_memory, old_size, location
+            )
+
+            if error != nil {
+                fmt.println("Failed to call to Alloc_Non_Zeroed")
+                os.exit(1)
+            }
+            return bytes, nil
     }
 
     fmt.println("Mode", mode, "not supported")
@@ -75,11 +88,11 @@ main :: proc () {
     chunk := make_chunk()
     defer delete_chunk(chunk)
 
-    add_constant(chunk, 3)
-    add_constant(chunk, 15)
-    add_constant(chunk, 23)
+    add_constant(chunk, 3, 1)
+    add_constant(chunk, 15, 2)
+    add_constant(chunk, 23, 3)
 
-    add_op(chunk, .OP_RETURN)
+    add_op(chunk, .OP_RETURN, 4)
 
     assembly := disassemble(chunk)
     fmt.println(assembly)
