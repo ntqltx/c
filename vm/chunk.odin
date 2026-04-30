@@ -2,12 +2,6 @@ package vm
 
 import "core:fmt"
 import "core:strings"
-import "core:mem"
-
-OpCode :: enum u8 {
-    OP_CONSTANT,
-    OP_RETURN,
-}
 
 Chunk :: struct {
     code : [dynamic]u8,

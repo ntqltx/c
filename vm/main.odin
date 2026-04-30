@@ -9,8 +9,7 @@ Allocator_Mode :: mem.Allocator_Mode
 Allocator_Error :: mem.Allocator_Error
 
 MyAllocatorData :: struct {
-    // arena : []byte,
-    allocator : Allocator,
+    allocator: Allocator,
 }
 
 my_allocator :: proc(my_allocator_data: ^MyAllocatorData) -> Allocator {
@@ -30,7 +29,7 @@ my_allocator_proc :: proc(
 
 ) -> ([]byte, Allocator_Error)
 {
-    allocator := (cast(^MyAllocatorData)allocator_data).allocator
+    allocator := (cast(^MyAllocatorData) allocator_data).allocator
 
     #partial switch mode {
         case .Alloc:
@@ -45,7 +44,7 @@ my_allocator_proc :: proc(
 
         case .Free:
             // fmt.println("FREE")
-            return nil, mem.free(cast(rawptr)old_memory, allocator, location)
+            return nil, mem.free(cast(rawptr) old_memory, allocator, location)
 
         case .Resize:
             // fmt.println("RESIZE")
@@ -79,12 +78,25 @@ my_allocator_proc :: proc(
 }
 
 main :: proc () {
-    my_data := MyAllocatorData {}
-    my_allocator_data_init(&my_data)
-    allocator := my_allocator(&my_data)
+    // stack : ^Stack = make_stack(8)
+    // defer delete_stack(stack)
+    // push(stack, 0.1)
 
-    context.allocator = allocator
+    // fmt.println(stack.top^)
+    // value := pop(stack)
+    // fmt.println("Popped:", value)
+    // fmt.println(stack.values)
 
+    // my_data := MyAllocatorData {}
+    // my_allocator_data_init(&my_data)
+    // allocator := my_allocator(&my_data)
+
+    // context.allocator = allocator
+
+    init_vm()
+    defer free_vm()
+
+    // test bytecode
     chunk := make_chunk()
     defer delete_chunk(chunk)
 
@@ -92,8 +104,12 @@ main :: proc () {
     add_constant(chunk, 15, 2)
     add_constant(chunk, 23, 3)
 
-    add_op(chunk, .OP_RETURN, 4)
+    add_op(chunk, .OP_NEGATE, 4)    
+    add_op(chunk, .OP_RETURN, 5)
 
-    assembly := disassemble(chunk)
-    fmt.println(assembly)
+    // print bytecode for reference
+    // assembly := disassemble(chunk)
+    // fmt.println(assembly)
+
+    interpret(chunk)
 }
