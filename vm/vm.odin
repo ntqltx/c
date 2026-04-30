@@ -82,6 +82,11 @@ run :: proc() -> InterpretResult {
                     fmt.println("Value:", value)
                 }
 
+            case .OP_ADD: apply(proc(a: Value, b: Value) -> Value { return a + b })
+            case .OP_SUB: apply(proc(a: Value, b: Value) -> Value { return a - b })
+            case .OP_MUL: apply(proc(a: Value, b: Value) -> Value { return a * b })
+            case .OP_DIV: apply(proc(a: Value, b: Value) -> Value { return a / b })
+
             case .OP_NEGATE:
                 value := pop(vm.stack)
                 push(vm.stack, -value)

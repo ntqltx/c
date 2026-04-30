@@ -100,16 +100,21 @@ main :: proc () {
     chunk := make_chunk()
     defer delete_chunk(chunk)
 
-    add_constant(chunk, 3, 1)
-    add_constant(chunk, 15, 2)
-    add_constant(chunk, 23, 3)
-
-    add_op(chunk, .OP_NEGATE, 4)    
-    add_op(chunk, .OP_RETURN, 5)
+    //// 2 * 2 + 8 - 15
+    add_constant(chunk, 2, 1)
+    add_constant(chunk, 2, 2)
+    add_op(chunk, .OP_MUL, 3)
+    
+    add_constant(chunk, 8, 4)
+    add_op(chunk, .OP_ADD, 5)
+    add_constant(chunk, 15, 6)
+    add_op(chunk, .OP_SUB, 7)
+    
+    add_op(chunk, .OP_RETURN, 8)
 
     // print bytecode for reference
-    // assembly := disassemble(chunk)
-    // fmt.println(assembly)
+    assembly := disassemble(chunk)
+    fmt.println(assembly)
 
     interpret(chunk)
 }
