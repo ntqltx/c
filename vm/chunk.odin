@@ -4,9 +4,9 @@ import "core:fmt"
 import "core:strings"
 
 Chunk :: struct {
-    code : [dynamic]u8,
-    line_numbers : map[int]int,
-    constants : ValueArray,
+    code: [dynamic]u8,
+    line_numbers: map[int]int,
+    constants: ValueArray,
 }
 
 add_constant :: proc(chunk: ^Chunk, value: Value, line_number: int) {
@@ -25,11 +25,10 @@ add_op :: proc(chunk: ^Chunk, op: OpCode, line_number: int) {
 
 make_chunk :: proc(code_cap := 0, constants_cap := 0) -> ^Chunk {
     chunk := new(Chunk)
-    code := make([dynamic]u8, 0, code_cap)
-    constants := make(ValueArray, 0, constants_cap)
 
-    chunk.code = code
-    chunk.constants = constants
+    chunk.code = make([dynamic]u8, 0, code_cap)
+    chunk.line_numbers = make(map[int] int)
+    chunk.constants = make(ValueArray, 0, constants_cap)
 
     return chunk
 }

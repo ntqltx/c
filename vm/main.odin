@@ -49,7 +49,7 @@ my_allocator_proc :: proc(
         case .Resize:
             // fmt.println("RESIZE")
             bytes, error := allocator.procedure(
-                allocator_data, mode, size, alignment, 
+                allocator.data, mode, size, alignment, 
                 old_memory, old_size, location
             )
 

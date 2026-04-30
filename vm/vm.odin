@@ -33,6 +33,11 @@ InterpretResult :: enum {
 }
 
 interpret :: proc(chunk: ^Chunk) -> InterpretResult {
+    if len(chunk.code) == 0 {
+        fmt.println("Empty chunk, nothing to execute")
+        return .OK
+    }
+
     vm.chunk = chunk
     vm.ip = &chunk.code[0]
 
@@ -93,7 +98,7 @@ run :: proc() -> InterpretResult {
 
             case .OP_RETURN:
                 value := pop(vm.stack)
-                fmt.println(value)
+                // fmt.println(value)
 
                 return .OK
         }
