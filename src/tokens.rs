@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use strum::EnumString;
 
-#[rustfmt::skip]
+// #[rustfmt::skip]
 #[derive(Debug, Copy, Clone, PartialEq, EnumString)]
 #[strum(serialize_all = "lowercase")]
 pub enum TokenType {

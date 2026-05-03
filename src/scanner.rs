@@ -88,9 +88,9 @@ impl Scanner {
 						self.advance();
 					}
 				} else if self.char_match('=') {
-					self.add_token(SlashEqual);
+					self.add_token(SlashEqual)
 				} else {
-					self.add_token(Slash);
+					self.add_token(Slash)
 				}
 			}
 
@@ -101,7 +101,7 @@ impl Scanner {
 			c if c.is_ascii_digit() => self.number()?,
 			c if c.is_alphabetic() || c == '_' => self.identifier(),
 			_ => {
-				return Err(scan_err!(self.line, "unexpected character '{}'", c));
+				return Err(scan_err!(self.line, "unexpected character '{}'", c))
 			}
 		}
 
@@ -119,12 +119,12 @@ impl Scanner {
 			lexeme,
 			literal,
 			line_number: self.line,
-		});
+		})
 	}
 
 	fn match_token(&mut self, ch: char, yes: TokenType, no: TokenType) {
 		let t = if self.char_match(ch) { yes } else { no };
-		self.add_token(t);
+		self.add_token(t)
 	}
 
 	fn identifier(&mut self) {
@@ -134,7 +134,7 @@ impl Scanner {
 
 		let lexeme = self.current_lexeme();
 		let token_type = TokenType::from_str(&lexeme).unwrap_or(Identifier);
-		self.add_token(token_type);
+		self.add_token(token_type)
 	}
 
 	fn number(&mut self) -> Result<(), String> {

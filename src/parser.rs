@@ -68,7 +68,10 @@ impl Parser {
 	fn comparison(&mut self) -> ParseResult<Expr> {
 		let mut expr = self.term()?;
 
-		while self.match_tokens(&[Greater, GreaterEqual, Less, LessEqual]) {
+		while self.match_tokens(&[
+			Greater, GreaterEqual,
+			Less, LessEqual
+		]) {
 			let operator = self.previous();
 			let rhs = self.term()?;
 
