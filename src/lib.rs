@@ -6,16 +6,18 @@ mod expr;
 mod parser;
 mod scanner;
 mod tokens;
+mod value;
 
 use compiler::Compiler;
 use expr::Statement;
 use parser::Parser;
 use scanner::Scanner;
+use value::{Value, obj_free};
 
 #[repr(C)]
 pub struct CompileOutput {
 	code: *mut u8,
-	constants: *mut f64,
+	constants: *mut Value,
 	code_len: usize,
 	constants_len: usize,
 }
@@ -23,21 +25,20 @@ pub struct CompileOutput {
 #[unsafe(no_mangle)]
 pub extern "C" fn compile(source_ptr: *const u8, source_len: usize) -> *mut CompileOutput {
 	if source_ptr.is_null() {
-		return null_mut()
+		return null_mut();
 	}
 
 	let Ok(source) = str::from_utf8(unsafe {
 		slice::from_raw_parts(source_ptr, source_len)
-	})
-	else {
-		return null_mut()
+	}) else {
+		return null_mut();
 	};
 
 	let tokens = match Scanner::new(source).scan_tokens() {
 		Ok(t) => t,
 		Err(e) => {
 			eprintln!("{e}");
-			return null_mut()
+			return null_mut();
 		}
 	};
 
@@ -45,43 +46,52 @@ pub extern "C" fn compile(source_ptr: *const u8, source_len: usize) -> *mut Comp
 		Ok(s) => s,
 		Err(e) => {
 			eprintln!("{e}");
-			return null_mut()
+			return null_mut();
 		}
 	};
 
 	let mut compiler = Compiler::new();
-	for Statement::Expression(expr) in &statements {
-		compiler.compile_expr(expr)
+	for stmt in &statements {
+		match stmt {
+			Statement::Expression(expr) => compiler.compile_expression_stmt(expr),
+			Statement::Print(expr) => compiler.compile_print(expr),
+		}
 	}
 
 	let (code, constants) = compiler.finish();
 	let (code_len, constants_len) = (code.len(), constants.len());
 
-	Box::into_raw(
-		Box::new(CompileOutput {
-			code: Box::into_raw(code.into_boxed_slice()) as *mut u8,
-			constants: Box::into_raw(constants.into_boxed_slice()) as *mut f64,
-			code_len,
-			constants_len,
-		})
-	)
+	Box::into_raw(Box::new(CompileOutput {
+		code: Box::into_raw(code.into_boxed_slice()) as *mut u8,
+		constants: Box::into_raw(constants.into_boxed_slice()) as *mut Value,
+		code_len,
+		constants_len,
+	}))
 }
 
 #[unsafe(no_mangle)]
 pub extern "C" fn free_compiled(output: *mut CompileOutput) {
 	if output.is_null() {
-		return
+		return;
 	}
 
 	unsafe {
 		let output = Box::from_raw(output);
+
+		let consts = Box::from_raw(slice_from_raw_parts_mut(
+			output.constants,
+			output.constants_len,
+		));
+		for v in consts.iter() {
+			if v.is_obj() {
+				obj_free(v.as_obj());
+			}
+		}
+		drop(consts);
+
 		drop(Box::from_raw(slice_from_raw_parts_mut(
 			output.code,
 			output.code_len,
-		)));
-		drop(Box::from_raw(slice_from_raw_parts_mut(
-			output.constants,
-			output.constants_len,
 		)));
 	}
 }

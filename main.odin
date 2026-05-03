@@ -9,7 +9,7 @@ foreign import comp "libcompiler.a"
 
 CompileOutput :: struct {
     code: [^]u8,
-    constants: [^]f64,
+    constants: [^]vm.Value,
     code_len: uint,
     constants_len: uint,
 }

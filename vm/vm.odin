@@ -71,7 +71,7 @@ run :: proc() -> InterpretResult {
                 if i > 0 {
                     fmt.print(", ")
                 }
-                fmt.print(value)
+                print_value(value)
             }
 
             fmt.println("]")
@@ -87,18 +87,28 @@ run :: proc() -> InterpretResult {
                     fmt.println("Value:", value)
                 }
 
-            case .OP_ADD: apply(proc(a: Value, b: Value) -> Value { return a + b })
-            case .OP_SUB: apply(proc(a: Value, b: Value) -> Value { return a - b })
-            case .OP_MUL: apply(proc(a: Value, b: Value) -> Value { return a * b })
-            case .OP_DIV: apply(proc(a: Value, b: Value) -> Value { return a / b })
+            case .OP_ADD: if r := binary_op(add); r != .OK do return r
+            case .OP_SUB: if r := binary_op(sub); r != .OK do return r
+            case .OP_MUL: if r := binary_op(mul); r != .OK do return r
+            case .OP_DIV: if r := binary_op(div); r != .OK do return r
+
+            case .OP_PRINT:
+                value := pop(vm.stack)
+                print_value(value)
+                fmt.println()
+
+            case .OP_POP:
+                pop(vm.stack)
 
             case .OP_NEGATE:
                 value := pop(vm.stack)
-                push(vm.stack, -value)
+                if !is_number(value) {
+                    runtime_error("operand must be number")
+                    return .RUNTIME_ERROR
+                }
+                push(vm.stack, number_val(-as_number(value)))
 
             case .OP_RETURN:
-                value := pop(vm.stack)
-                fmt.println(value)
                 return .OK
         }
     }

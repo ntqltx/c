@@ -19,6 +19,7 @@ pub enum Expr {
 #[derive(Debug)]
 pub enum Statement {
 	Expression(Expr),
+	Print(Expr),
 }
 
 impl std::fmt::Display for Expr {
@@ -42,6 +43,7 @@ impl std::fmt::Display for Statement {
 	fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
 		match self {
 			Statement::Expression(e) => write!(f, "{e}"),
+			Statement::Print(e) => write!(f, "{e}"),
 		}
 	}
 }

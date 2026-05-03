@@ -35,8 +35,15 @@ impl Parser {
 	}
 
 	fn statement(&mut self) -> ParseResult<Statement> {
-		// only expression statement for now
+		if self.match_token(TokenType::Print) {
+			return self.print_statement()
+		}
 		self.expression_statement()
+	}
+
+	fn print_statement(&mut self) -> ParseResult<Statement> {
+		let expr = self.expression()?;
+		Ok(Statement::Print(expr))
 	}
 
 	fn expression_statement(&mut self) -> ParseResult<Statement> {

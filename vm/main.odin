@@ -101,13 +101,13 @@ main :: proc () {
     defer delete_chunk(chunk)
 
     //// 2 * 2 + 8 - 15
-    add_constant(chunk, 2, 1)
-    add_constant(chunk, 2, 2)
+    add_constant(chunk, number_val(2), 1)
+    add_constant(chunk, number_val(2), 2)
     add_op(chunk, .OP_MUL, 3)
-    
-    add_constant(chunk, 8, 4)
+
+    add_constant(chunk, number_val(8), 4)
     add_op(chunk, .OP_ADD, 5)
-    add_constant(chunk, 15, 6)
+    add_constant(chunk, number_val(15), 6)
     add_op(chunk, .OP_SUB, 7)
     
     add_op(chunk, .OP_RETURN, 8)
