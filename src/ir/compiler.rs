@@ -22,7 +22,7 @@ impl Compiler {
 		}
 	}
 
-	pub fn resolve_expr(&mut self, expr: &Expr) {
+	pub fn emit_expr(&mut self, expr: &Expr) {
 		match expr {
 			Expr::Literal(value) => match value {
 				LiteralValue::NumberValue(n) => self.add_constant(Value::number(*n)),
@@ -38,8 +38,8 @@ impl Compiler {
 				operator,
 				right,
 			} => {
-				self.resolve_expr(left);
-				self.resolve_expr(right);
+				self.emit_expr(left);
+				self.emit_expr(right);
 
 				match operator.token_type {
 					Plus => self.add_op(OpCode::Add),
@@ -50,25 +50,25 @@ impl Compiler {
 				}
 			}
 			Expr::Unary { operator, right } => {
-				self.resolve_expr(right);
+				self.emit_expr(right);
 
 				match operator.token_type {
 					Minus => self.add_op(OpCode::Negate),
 					_ => todo!(),
 				}
 			}
-			Expr::Grouping(expr) => self.resolve_expr(expr),
+			Expr::Grouping(expr) => self.emit_expr(expr),
 		}
 	}
 
-	pub fn resolve_print(&mut self, expr: &Expr) {
-		self.resolve_expr(expr);
+	pub fn emit_print(&mut self, expr: &Expr) {
+		self.emit_expr(expr);
 		self.add_op(OpCode::Print);
 	}
 
 	// for repl we're adding OpCode::Pop
-	pub fn resolve_expression(&mut self, expr: &Expr) {
-		self.resolve_expr(expr);
+	pub fn emit_expression(&mut self, expr: &Expr) {
+		self.emit_expr(expr);
 		self.add_op(OpCode::Pop);
 	}
 

@@ -258,6 +258,13 @@ mod tests {
 	}
 
 	#[test]
+	fn print_ok() {
+		assert!(parse_str("print \"Hello\"").is_ok());
+		assert!(parse_str("print true").is_ok());
+		assert!(parse_str("print 1 + 2 + 3").is_ok());
+	}
+	
+	#[test]
 	#[should_panic]
 	fn unclosed_paren_panics() {
 		parse_str("(1 + 2").unwrap();

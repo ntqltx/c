@@ -3,10 +3,6 @@ package vm
 import "core:fmt"
 import "core:mem"
 
-_DEBUG      :: false
-DEBUG       :: _DEBUG
-DEBUG_TRACE :: _DEBUG
-
 VM :: struct {
     chunk: ^Chunk,
     ip: ^u8,
@@ -23,7 +19,11 @@ init_vm :: proc() {
 }
 
 free_vm :: proc() {
-    // free(vm.chunk)
+    delete_stack(vm.stack)
+    
+    vm.stack = nil
+    vm.chunk = nil
+    vm.ip = nil
 }
 
 InterpretResult :: enum i32 {
@@ -60,32 +60,12 @@ read_constant :: proc() -> Value {
 
 run :: proc() -> InterpretResult {
     for {
-        when DEBUG_TRACE {
-            fmt.println("--- STACK ---")
-            fmt.print("[")
-            
-            for &value, i in &vm.stack.values {
-                if &value == vm.stack.top {
-                    break
-                }
-                if i > 0 {
-                    fmt.print(", ")
-                }
-                print_value(value)
-            }
-
-            fmt.println("]")
-        }
-
         instruction := cast(OpCode) read_byte()
+        
         switch instruction {
             case .OP_CONSTANT:
                 value := read_constant()
                 push(vm.stack, value)
-
-                when DEBUG {
-                    fmt.println("Value:", value)
-                }
 
             case .OP_ADD: if r := binary_op(add); r != .OK do return r
             case .OP_SUB: if r := binary_op(sub); r != .OK do return r

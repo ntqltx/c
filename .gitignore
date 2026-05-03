@@ -2,6 +2,7 @@
 # must remove it later
 /test.rs
 
+/true.dSYM
 .DS_Store
 
 *.bin

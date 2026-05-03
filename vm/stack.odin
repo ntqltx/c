@@ -27,7 +27,7 @@ delete_stack :: proc(stack: ^Stack) {
 }
 
 push :: #force_inline proc(stack: ^Stack, value: Value) {
-    when DEBUG {
+    when ODIN_DEBUG {
         number_of_elements := mem.ptr_sub(stack.top, &stack.values[0])
         if number_of_elements > len(stack.values) {
             fmt.println("Stack overflow")
@@ -40,7 +40,7 @@ push :: #force_inline proc(stack: ^Stack, value: Value) {
 }
 
 pop :: #force_inline proc(stack: ^Stack) -> Value {
-    when DEBUG {
+    when ODIN_DEBUG {
         number_of_elements := mem.ptr_sub(stack.top, &stack.values[0])
         if number_of_elements == 0 {
             fmt.println("Stack underflow")

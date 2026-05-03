@@ -4,7 +4,6 @@ import "core:fmt"
 
 ObjKind :: enum u8 {
     String = 0,
-    Keyword,
 }
 
 Obj :: struct {
@@ -29,8 +28,8 @@ as_string :: #force_inline proc(v: Value) -> string {
 print_value :: proc(v: Value) {
     switch {
         case is_number(v): fmt.print(as_number(v))
-        case is_nil(v): fmt.print("nil")
         case is_bool(v): fmt.print(as_bool(v))
+        case is_nil(v): fmt.print("nil")
         case is_obj(v):
             #partial switch as_obj(v).kind {
                 case .String: fmt.print(as_string(v))

@@ -13,13 +13,13 @@ impl Statement {
 			match stmt {
 				Statement::Expression(expr) => {
 					if is_repl {
-						compiler.resolve_print(expr)
+						compiler.emit_print(expr)
 					}
 					else {
-						compiler.resolve_expression(expr)
+						compiler.emit_expression(expr)
 					}
 				},
-				Statement::Print(expr) => compiler.resolve_print(expr),
+				Statement::Print(expr) => compiler.emit_print(expr),
 			}
 		}
 	}

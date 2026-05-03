@@ -61,28 +61,31 @@ repl :: proc() {
 }
 
 run_file :: proc(path: string) {
+    if !os.exists(path) {
+        fmt.eprintfln("error: file '%v' not found", path)
+        return
+    }
+    if !strings.has_suffix(path, FILE_EXT) {
+        fmt.eprintln("error: file isn't a True source file")
+        return
+    }
+
     bytes, err := os.read_entire_file_from_path(path, context.allocator)
     if err != nil {
         fmt.eprintln("error: could not read file, check if path is correct")
         return
     }
     defer delete(bytes)
-
-    if !strings.has_suffix(path, FILE_EXT) {
-        fmt.eprintln("error: file isn't a True source file")
-        return
-    }
     main_interpret(cast(string) bytes, false)
 }
 
 main :: proc() {
     args := os.args
 
-    my_data := vm.MyAllocatorData {}
-    vm.my_allocator_data_init(&my_data)
-    allocator := vm.my_allocator(&my_data)
-
-    context.allocator = allocator
+    when ODIN_DEBUG {
+        context.allocator = vm.init_allocator()
+        defer vm.destroy_allocator()
+    }
 
     vm.init_vm()
     defer vm.free_vm()
