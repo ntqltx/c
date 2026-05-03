@@ -1,5 +1,9 @@
 /target
+# must remove it later
+/test.rs
 
 *.bin
 *.a
+*.lib
+true
 c

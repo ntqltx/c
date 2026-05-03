@@ -15,13 +15,13 @@ run: build-release
 [group("dev")]
 build-release:
     cargo build --release
-    cp target/release/libc.a .
+    cp target/release/libcompiler.a .
 
 [windows]
 [group("dev")]
 build-release:
     cargo build --release
-    copy target\release\c.lib .
+    copy target\release\compiler.lib . # idk if it works on windows
 
 # run vm
 [group("dev")]

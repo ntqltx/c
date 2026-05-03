@@ -5,7 +5,7 @@ import "core:fmt"
 import "core:os"
 
 import "vm"
-foreign import comp "libc.a"
+foreign import comp "libcompiler.a"
 
 CompileOutput :: struct {
     code: [^]u8,

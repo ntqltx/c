@@ -49,7 +49,15 @@ impl Compiler {
 					_ => todo!(),
 				}
 			}
-			_ => todo!(),
+			Expr::Unary { operator, right } => {
+				self.compile_expr(right);
+
+				match operator.token_type {
+					Minus => self.add_op(OpCode::Negate),
+					_ => todo!()
+				}
+			}
+			Expr::Grouping(expr) => self.compile_expr(expr),
 		}
 	}
 
@@ -138,5 +146,101 @@ mod tests {
 
 		assert!(c.code.is_empty());
 		assert!(c.constants.is_empty());
+	}
+
+	#[test]
+	fn grouping_emits_inner_expr() {
+		let mut c = Compiler::new();
+		c.compile_expr(&Expr::Grouping(Box::new(Expr::Literal(NumberValue(7.0)))));
+
+		assert_eq!(c.constants, [7.0]);
+		assert_eq!(c.code, [OpCode::Constant as u8, 0]);
+	}
+
+	#[test]
+	fn grouping_with_binary_emits_correct_bytes() {
+		let mut c = Compiler::new();
+		c.compile_expr(&Expr::Grouping(Box::new(Expr::Binary {
+			left: Box::new(Expr::Literal(NumberValue(1.0))),
+			operator: Token {
+				token_type: Star,
+				lexeme: "*".to_string(),
+				literal: None,
+				line_number: 1,
+			},
+			right: Box::new(Expr::Literal(NumberValue(2.0))),
+		})));
+
+		assert_eq!(c.constants, [1.0, 2.0]);
+		assert_eq!(
+			c.code,
+			[
+				OpCode::Constant as u8,
+				0,
+				OpCode::Constant as u8,
+				1,
+				OpCode::Mul as u8,
+			]
+		);
+	}
+
+	#[test]
+	#[should_panic]
+	fn grouping_non_number_literal_panics() {
+		let mut c = Compiler::new();
+		c.compile_expr(&Expr::Grouping(Box::new(Expr::Literal(LiteralValue::Nil))));
+	}
+
+	#[test]
+	fn unary_negate_emits_correct_bytes() {
+		let mut c = Compiler::new();
+		c.compile_expr(&Expr::Unary {
+			operator: Token {
+				token_type: Minus,
+				lexeme: "-".to_string(),
+				literal: None,
+				line_number: 1,
+			},
+			right: Box::new(Expr::Literal(NumberValue(5.0))),
+		});
+
+		assert_eq!(c.constants, [5.0]);
+		assert_eq!(
+			c.code,
+			[OpCode::Constant as u8, 0, OpCode::Negate as u8]
+		);
+	}
+
+	#[test]
+	fn double_negate_stacks_ops() {
+		let mut c = Compiler::new();
+		c.compile_expr(&Expr::Unary {
+			operator: Token {
+				token_type: Minus,
+				lexeme: "-".to_string(),
+				literal: None,
+				line_number: 1,
+			},
+			right: Box::new(Expr::Unary {
+				operator: Token {
+					token_type: Minus,
+					lexeme: "-".to_string(),
+					literal: None,
+					line_number: 1,
+				},
+				right: Box::new(Expr::Literal(NumberValue(3.0))),
+			}),
+		});
+
+		assert_eq!(c.constants, [3.0]);
+		assert_eq!(
+			c.code,
+			[
+				OpCode::Constant as u8,
+				0,
+				OpCode::Negate as u8,
+				OpCode::Negate as u8,
+			]
+		);
 	}
 }
