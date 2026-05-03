@@ -7,61 +7,56 @@ import "core:os"
 import "vm"
 foreign import comp "libc.a"
 
-foreign comp {
-    tokenize :: proc(source: string) -> vm.InterpretResult ---
+CompileOutput :: struct {
+    code: [^]u8,
+    constants: [^]f64,
+    code_len: uint,
+    constants_len: uint,
 }
 
-compile_to_bytecode :: proc() -> ^vm.Chunk {
-    chunk := vm.make_chunk()
-
-    vm.add_constant(chunk, 3, 1)
-    vm.add_op(chunk, .OP_RETURN, 2)
-
-    return chunk
+foreign comp {
+    compile :: proc(source: string) -> ^CompileOutput ---
+    free_compiled :: proc(output: ^CompileOutput) ---
 }
 
 main_interpret :: proc(source: string) -> vm.InterpretResult {
-    // execute
-    chunk := compile_to_bytecode()
+    output := compile(source)
+    if output == nil {
+        return .COMPILE_ERROR
+    }
+    defer free_compiled(output)
+
+    chunk := vm.make_chunk(int(output.code_len), int(output.constants_len))
     defer vm.delete_chunk(chunk)
-    
-    tokenize(source)
-    result := vm.interpret(chunk)
-    return .OK
+
+    append(&chunk.code, ..output.code[:output.code_len])
+    append(&chunk.constants, ..output.constants[:output.constants_len])
+
+    return vm.interpret(chunk)
 }
 
 repl :: proc() {
     vm.init_vm()
     defer vm.free_vm()
-    
+
     buffer := make([]u8, 1024)
-    
+    defer delete(buffer)
+
     for {
         mem.zero_slice(buffer)
         fmt.print("> ")
 
-        n_bytes_read, err := os.read(os.stdin, buffer)
-        
-        if n_bytes_read == 0 {
+        n, err := os.read(os.stdin, buffer)
+        if n == 0 || err != nil {
             break
         }
 
-        input := cast(string) buffer[:n_bytes_read - 1]
-        result := main_interpret(input)
-
-        // fmt.println(result)
-
-        if result != .OK {
-            fmt.println("Failed to interpret")
-            break
+        if result := main_interpret(cast(string) buffer[:n - 1]); result != .OK {
+            fmt.eprintln("error: interpret failed")
         }
-
-        fmt.println("\nGot:", input)
     }
 
     fmt.println("")
-    // fmt.println("result, ok:", result, ok)
-    // fmt.println("buffer:", buffer[:20])
 }
 
 main :: proc() {
@@ -69,16 +64,16 @@ main :: proc() {
 
     switch len(args) {
         case 1:
-            // no input file given, start repl
             repl()
         case 2:
-            // assume we were given a file, read it, compile and execute
-            bytes, success := os.read_entire_file_from_path(args[1], context.allocator)
-            file_contains := cast(string) bytes
-            fmt.println(file_contains)
-
-            // fmt.println("Got two args")
+            bytes, err := os.read_entire_file_from_path(args[1], context.allocator)
+            if err != nil {
+                fmt.eprintln("error: could not read file")
+                return
+            }
+            defer delete(bytes)
+            main_interpret(cast(string) bytes)
         case:
-            fmt.println("Got something else")
+            fmt.eprintln("usage: c [file]")
     }
 }

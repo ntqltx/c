@@ -98,8 +98,7 @@ run :: proc() -> InterpretResult {
 
             case .OP_RETURN:
                 value := pop(vm.stack)
-                // fmt.println(value)
-
+                fmt.println(value)
                 return .OK
         }
     }

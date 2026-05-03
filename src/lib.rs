@@ -1,51 +1,80 @@
-use std::ffi::c_char;
+use std::ffi::{CStr, c_char};
+use std::ptr::{null_mut, slice_from_raw_parts_mut};
 
 mod compiler;
-mod tokens;
-mod scanner;
-mod parser;
 mod expr;
+mod parser;
+mod scanner;
+mod tokens;
 
-use scanner::Scanner;
+use compiler::Compiler;
+use expr::Statement;
 use parser::Parser;
+use scanner::Scanner;
 
 #[repr(C)]
-#[allow(non_camel_case_types)]
-pub enum InterpretResult {
-    OK,
-    COMPILE_ERROR,
-    RUNTIME_ERROR
+pub struct CompileOutput {
+	code: *mut u8,
+	constants: *mut f64,
+	code_len: usize,
+	constants_len: usize,
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn tokenize(source: *const c_char) -> InterpretResult {
-    let source = unsafe { std::ffi::CStr::from_ptr(source) };
-    let source = match source.to_str() {
-        Ok(s) => s,
-        Err(_) => return InterpretResult::COMPILE_ERROR,
-    };
+pub extern "C" fn compile(source: *const c_char) -> *mut CompileOutput {
+	let Ok(source) = (unsafe { CStr::from_ptr(source) }).to_str() else {
+		return null_mut()
+	};
 
-    let scanner = Scanner::new(source);
-    
-    let tokens = match scanner.scan_tokens() {
-        Ok(tokens) => tokens,
-        Err(e) => {
-            eprintln!("{}", e);
-            return InterpretResult::COMPILE_ERROR;
-        }
-    };
+	let tokens = match Scanner::new(source).scan_tokens() {
+		Ok(t) => t,
+		Err(e) => {
+			eprintln!("{e}");
+			return null_mut()
+		}
+	};
 
-    let statements = match Parser::new(tokens).parse() {
-        Ok(stmts) => stmts,
-        Err(e) => {
-            eprintln!("{e}");
-            return InterpretResult::COMPILE_ERROR;
-        }
-    };
+	let statements = match Parser::new(tokens).parse() {
+		Ok(s) => s,
+		Err(e) => {
+			eprintln!("{e}");
+			return null_mut()
+		}
+	};
 
-    for stmt in &statements {
-        println!("{stmt}");
-    }
+	let mut compiler = Compiler::new();
+	for Statement::Expression(expr) in &statements {
+		compiler.compile_expr(expr);
+	}
 
-    InterpretResult::OK
+	let (code, constants) = compiler.finish();
+    let (code_len, constants_len) = (code.len(), constants.len());
+
+	Box::into_raw(
+        Box::new(CompileOutput {
+            code: Box::into_raw(code.into_boxed_slice()) as *mut u8,
+            constants: Box::into_raw(constants.into_boxed_slice()) as *mut f64,
+            code_len,
+            constants_len
+        })
+    )
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn free_compiled(output: *mut CompileOutput) {
+	if output.is_null() {
+		return
+	}
+
+	unsafe {
+		let output = Box::from_raw(output);
+		drop(Box::from_raw(slice_from_raw_parts_mut(
+			output.code,
+			output.code_len,
+		)));
+		drop(Box::from_raw(slice_from_raw_parts_mut(
+			output.constants,
+			output.constants_len,
+		)));
+	}
 }
